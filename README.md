@@ -1,5 +1,7 @@
 # Dead Reckoning — The Midnight Files
 
+[🎮 Play the game](https://elifertugrul777.github.io/dead-reckoning/)
+
 **GMT 458 · Web GIS · GeoGame**  
 **Author:** Elif Ertuğrul
 

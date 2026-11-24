@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#121022">
+<meta name="description" content="Üç şehirde olay yerini incele, alibileri haritada sınayıp cinayetleri birbirine bağla. GMT 458 Web GIS oyunu.">
+<title>Dead Reckoning — The Midnight Files</title>
+<link rel="stylesheet" href="style.css">
+<script defer src="world.js"></script>
+<script defer src="cases.js"></script>
+<script defer src="turkish.js"></script>
+<script defer src="game.js"></script>
+</head>
+<body>
+<header class="top">
+  <a href="#main" id="brand" class="wordmark"><span class="mark" aria-hidden="true">⌖</span><span>DEAD RECKONING</span></a>
+  <div class="top-actions"><button id="guide" class="quiet" type="button">Nasıl oynanır?</button><button id="sound" class="quiet" type="button" aria-pressed="false">♪ Ses kapalı</button></div>
+</header>
+<main id="main" tabindex="-1">
+  <section id="landing">
+    <div class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">THE MIDNIGHT FILES</p>
+        <h1>Dead<br>Reckoning<span>.</span></h1>
+        <p class="subtitle">Üç şehirde üç cinayet. Dosyaları birbirine bağlayan tek bir dakika var.</p>
+        <div class="hero-actions">
+          <button id="start" class="primary" type="button">Olay yerine git</button>
+          <button id="continue" class="secondary" type="button" hidden>Kaldığım yerden</button>
+        </div>
+        <p class="best" id="best" hidden></p>
+      </div>
+      <div class="hero-art" aria-hidden="true"></div>
+    </div>
+    <div class="city-strip" id="city-strip"></div>
+  </section>
+  <section id="workspace" hidden aria-label="Soruşturma"></section>
+</main>
+<footer><span>GMT 458 · Web GIS</span><span>WGS 84 koordinatlar · Şematik güzergâhlar · Kurgusal vakalar</span></footer>
+<dialog id="dialog"><form method="dialog"><button class="quiet close" aria-label="Kapat">×</button></form><div id="dialog-content"></div></dialog>
+<noscript>Oyunu açmak için JavaScript gerekli.</noscript>
+</body>
+</html>

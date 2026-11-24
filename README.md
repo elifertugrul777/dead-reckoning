@@ -20,7 +20,7 @@ Put the extracted files at the root of a GitHub repository. Under **Settings →
 | Tokyo | Locate 4 clues, complete 2 map tests, submit 1 verdict | 120 s |
 | Joint finale | Select 3 city records, align them in UTC and identify 1 key custodian | 150 s |
 
-The campaign opens untimed. The player can start the timed challenge from any unsolved phase. After timeout, the player can continue untimed with existing evidence or retry that file. There is no life count. The three chapters award 300 base points each, and the finale awards 450. An active timed file adds the displayed seconds remaining at submission. Each incorrect substantive comparison or verdict subtracts 15 from the possible time bonus, with a floor of zero for the bonus. The theoretical maximum is 1,860. In-browser storage retains progress and the local personal record. The redesigned version starts with a separate save slot.
+The campaign opens untimed. The player can start the timed challenge from any unsolved phase. After timeout, the player can continue untimed with existing evidence or retry that file. There is no life count. The three chapters award 300 base points each, and the finale awards 450. An active timed file adds the displayed seconds remaining at submission. Each incorrect substantive comparison or verdict subtracts 15 from the possible time bonus, with a floor of zero for the bonus. The theoretical maximum is 1,860. In-browser storage retains progress and the local personal record. The animated interface uses the same progress and score keys as V2.
 
 ## Interface sketch
 
@@ -30,7 +30,7 @@ CASE      Current chapter and step progress | Optional timer
 SEARCH    Illustrated room with four clickable traces
           Detective portrait and next action
           Evidence inventory | Open map
-ANALYZE   Two map tests | Interactive map | Timeline and route animation
+ANALYZE   Interactive map and timeline | Highlighted test and animated reconstruction
 VERDICT   One conclusion at a time | Submit or review map
 FINALE    World map and city clocks | Custody ledger | Final report
 ```

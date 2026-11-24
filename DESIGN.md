@@ -31,3 +31,7 @@ Dört akor üzerine kurulu müzik, düşük frekanslı vuruşlar ve değişen ü
 - `game.js` oyun akışı, çizim, ses, süre ve ilerleme kaydı.
 
 Vaka süreli olmak zorunda değildir. Süresi dolan oyuncu delillerini koruyarak süresiz devam edebilir. GitHub Pages sürümü, klasör yapısı korunarak yayımlanır.
+
+## Hareketli harita ekranı
+
+Şehir görseli ve bölüm başlığı üstte, canlı harita ile testler aynı çalışma alanında görünür. Sıradaki test renk ve simgeyle belirtilir. Bir test başlatıldığında saat birkaç oyun dakikası ilerler, araç rotada konum değiştirir ve sonuç oynatım bitince açılır. Mobilde harita ile test paneli alt alta gelir. Hareketi azalt tercihi olan tarayıcılarda geçişler kapalıdır ve test sonucu doğrudan gösterilir.

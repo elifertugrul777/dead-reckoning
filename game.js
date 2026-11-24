@@ -141,6 +141,7 @@ function goHome() {
 function render(top=false) {
   clearInterval(ticker);
   stopPlayback();
+  workspace.classList.toggle('scene-entry', top);
   if (game.finished) showOutcome();
   else if (game.stage===cities.length) renderFinal();
   else renderCase(cities[game.stage]);
@@ -154,7 +155,7 @@ function render(top=false) {
 function nav() {
   const locations=cities.concat([{city:'Final',no:'04'}]);
   return '<nav class="case-nav" aria-label="Dosya ilerlemesi">'+locations.map((city,i)=>
-    '<span '+(i===game.stage?'aria-current="step"':'')+' class="'+(i<game.stage?'cleared':'')+'">'+(i<game.stage?'✓ ':city.no+' · ')+city.city+'</span>'
+    '<span '+(i===game.stage?'aria-current="step"':'')+' class="'+(i<game.stage?'cleared':'')+'"><i aria-hidden="true">'+(i<game.stage?'✓':city.no)+'</i>'+city.city+'</span>'
   ).join('')+'<button id="home" type="button" class="quiet">Ana menü</button></nav>';
 }
 function remaining() { return Math.max(0,Math.ceil((game.deadline-Date.now())/1000)); }
@@ -285,7 +286,7 @@ function paintMap(city, view, showRoute, selectedSite, minute) {
   if (world) {
     if (game.aligned) {
       const linked = [cities[1], cities[0], cities[2]].map(item=>item.center);
-      map.append(graphic('path',{d:path(linked,proj),stroke:'#f1ac65','stroke-width':1.5,'stroke-dasharray':'5 5',fill:'none','pointer-events':'none'}));
+      map.append(graphic('path',{d:path(linked,proj),class:'route-thread',stroke:'#ff8577','stroke-width':2.5,'stroke-dasharray':'5 5',fill:'none','pointer-events':'none'}));
     }
     const offsets = [[13,21],[11,-12],[11,-12]];
     cities.forEach((item,index) => addMarker(map,item.center,item.city,proj,() => {
@@ -295,13 +296,16 @@ function paintMap(city, view, showRoute, selectedSite, minute) {
   } else {
     if(city.water) svgLabel(map,city.water,530,220,'small-map');
     if(showRoute) {
-      map.append(graphic('path',{d:path(city.route,proj),stroke:'#31464a','stroke-width':7,fill:'none'}));
-      map.append(graphic('path',{d:path(city.route,proj),stroke:'#7baba4','stroke-width':2,'stroke-dasharray':'8 5',fill:'none'}));
-      const [, departure, arrival] = city.track;
-      const progress = (minute-departure)/(arrival-departure);
-      const [x,y] = proj(pointAlong(city.route,progress));
-      const vehicle = graphic('circle',{cx:x,cy:y,r:8,fill:'#f1ac65',stroke:'#201c17','stroke-width':2.2});
-      vehicle.id = 'vehicle-on-map';
+      const routePath=path(city.route,proj);
+      map.append(graphic('path',{d:routePath,stroke:'#48ffd43a','stroke-width':12,fill:'none'}));
+      map.append(graphic('path',{d:routePath,class:'route-thread',stroke:'#5cffe0','stroke-width':3,'stroke-dasharray':'8 7',fill:'none'}));
+      const [,departure,arrival]=city.track;
+      const [x,y]=proj(pointAlong(city.route,(minute-departure)/(arrival-departure)));
+      const vehicle=graphic('g',{id:'vehicle-on-map','pointer-events':'none'});
+      vehicle.style.transform='translate('+x+'px,'+y+'px)';
+      vehicle.append(graphic('circle',{r:14,fill:'#ffc6744d',class:'vehicle-pulse'}),
+        graphic('circle',{r:10,fill:'#ffd283',stroke:'#2c2431','stroke-width':1.5}),
+        graphic('path',{d:city.id==='tokyo'?'M-4 -4H4V2L2 5H-2L-4 2Z M-2 -2H2':'M-6 0L-3 4H3L6 0Z M-3 0V-4H2L4 0',fill:'none',stroke:'#302319','stroke-width':1.3}));
       map.append(vehicle);
     }
     const offsets = city.id === 'lisbon' ? [[-12,-15,'end'],[12,-12],[12,-13]] :
@@ -315,6 +319,8 @@ function paintMap(city, view, showRoute, selectedSite, minute) {
         markers[index]?.focus();
       },selectedSite.value === id,offsets[index]);
     });
+    const vehicle = map.querySelector('#vehicle-on-map');
+    if (vehicle) map.append(vehicle);
     const latitude = city.center[1];
     const px500 = (.5/(111.32 * Math.cos(latitude*Math.PI/180))) / city.span[0]*w;
     line(map,20,357,20+px500,357,'#bed0cd',2);
@@ -366,7 +372,7 @@ function evidenceBag(city) {
 }
 function renderCase(city) {
   const mode=game.phase;
-  workspace.innerHTML=nav()+'<article class="board">'+board(city.label,city.city+' · '+city.date)+expiryMarkup()+phaseBar(mode)+
+  workspace.innerHTML=nav()+'<article class="board case-board" data-scene="'+city.id+'" data-phase="'+mode+'">'+board(city.label,city.city+' · '+city.date)+expiryMarkup()+phaseBar(mode)+
     (mode==='hunt'?huntMarkup(city):mode==='map'?caseMapMarkup(city):verdictMarkup(city))+'</article>';
   if(mode==='hunt') bindHunt(city);
   else if(mode==='map') bindCaseMap(city);
@@ -425,69 +431,108 @@ function bindHunt(city) {
 }
 function caseMapMarkup(city) {
   const solved=game.solved.length;
-  return '<div class="mission"><span><strong>Alibiyi sına</strong> · İki harita testini tamamla</span><output>'+solved+' / 2 test</output></div>'+
-    '<div class="test-row">'+city.tests.map((test,i)=>
-      '<button type="button" class="secondary '+(game.solved.includes(i)?'test-done':'')+'" data-lock data-test="'+i+'">'+(game.solved.includes(i)?'✓ ':'')+test.title+'</button>'
-    ).join('')+'</div><p id="notice" class="notice" role="status" hidden></p>'+
-    '<div class="map-frame">'+mapMarkup(city)+
+  const next=city.tests.findIndex((_,i)=>!game.solved.includes(i));
+  return '<div class="analysis-stage"><div class="map-frame mission-map">'+mapMarkup(city)+
     '<div class="timeline"><div><label for="scrub">Olay saati</label><output id="local-time" for="scrub"></output></div>'+
     '<input type="range" id="scrub" min="'+city.range[0]+'" max="'+city.range[1]+'" value="'+city.range[0]+'" data-lock>'+
     '<div><span id="vehicle-status"></span><button id="playback" class="secondary" type="button" data-lock>▶ Canlandır</button></div></div></div>'+
-    say('officer','Bir test seç. Haritada aracın nerede olduğunu gör, sonra iki sonuca dayanarak karar ver.')+
-    evidenceBag(city)+'<div class="bottom-bar"><button type="button" id="action" data-lock class="primary" '+(solved===2?'':'disabled')+'>Alibi hakkında karar ver</button></div>';
+    '<aside class="case-console">'+say('officer','Bir testi başlat. Rotayı izle ve delilin ne söylediğine bak.')+
+    '<div class="mission"><strong id="objective">'+(solved===2?'Karar vermeye hazırsın':'Alibiyi sına')+'</strong><output>'+solved+' / 2</output></div>'+
+    '<div class="test-row">'+city.tests.map((test,i)=>{
+      const done=game.solved.includes(i);
+      return '<button type="button" class="secondary '+(done?'test-done':i===next?'next-test':'')+'" data-lock data-test="'+i+'"><b aria-hidden="true">'+(done?'✓':'▶')+'</b><span>'+test.title+'</span></button>';
+    }).join('')+'</div><p id="notice" class="notice" role="status" hidden></p>'+
+    '<button type="button" id="action" data-lock class="primary" '+(solved===2?'':'disabled')+'>Karar ekranına geç</button></aside></div>'+
+    evidenceBag(city);
 }
 function bindCaseMap(city) {
   let view='local';
   let route=true;
   const site={value:null};
   let minute=city.range[0];
+  let activeTest=null;
+  const km=routeKm(city.route).toFixed(2);
+  const [,departure,arrival]=city.track;
+  const projection=project(city.center,city.span,760,390);
   const draw=()=>paintMap(city,view,route,site,minute);
+  const canAct=()=>!game.deadline || remaining()>0;
   function change(value) {
     minute=Number(value);
     $('scrub').value=minute;
     $('local-time').textContent=timeText(city,minute);
-    $('vehicle-status').textContent=travelState(city,minute)+' · ≈ '+routeKm(city.route).toFixed(2)+' km';
-    const dot=$('vehicle-on-map');
-    if(dot) {
-      const [,departure,arrival]=city.track;
-      const projection=project(city.center,city.span,760,390);
+    $('vehicle-status').textContent=travelState(city,minute)+' · ≈ '+km+' km';
+    const vehicle=$('vehicle-on-map');
+    if(vehicle) {
       const [x,y]=projection(pointAlong(city.route,(minute-departure)/(arrival-departure)));
-      dot.setAttribute('cx',x);dot.setAttribute('cy',y);
+      vehicle.style.transform='translate('+x+'px,'+y+'px)';
     }
   }
-  function halt() {stopPlayback();$('playback').textContent='▶ Canlandır';}
-  $('scrub').addEventListener('input',event=>{halt();change(event.target.value);});
+  function halt() {
+    stopPlayback();
+    activeTest=null;
+    $('playback').textContent='▶ Canlandır';
+    workspace.querySelectorAll('[data-test]').forEach(button=>button.removeAttribute('aria-busy'));
+  }
+  $('scrub').addEventListener('input',event=>{
+    if(activeTest!==null) showNote('Canlandırma durdu. Testi tekrar başlatabilirsin.');
+    halt();change(event.target.value);
+  });
   $('playback').onclick=()=>{
+    if(activeTest!==null) showNote('Test durdu. Sonucu görmek için testi tekrar başlat.');
     if(playback){halt();return;}
     if(minute>=city.range[1]) change(city.range[0]);
     $('playback').textContent='Ⅱ Duraklat';
     playback=setInterval(()=>{
       change(Math.min(city.range[1],minute+1));
       if(minute>=city.range[1]) halt();
-    },330);
+    },280);
   };
+  function buttons() {
+    $('map-buttons').querySelectorAll('[data-map]').forEach(item=>item.setAttribute('aria-pressed',item.dataset.map==='route'?route:item.dataset.map===view));
+  }
   $('map-buttons').addEventListener('click',event=>{
     const button=event.target.closest('[data-map]');
     if(!button) return;
     if(button.dataset.map==='route') route=!route;
     else view=button.dataset.map;
-    $('map-buttons').querySelectorAll('[data-map]').forEach(item=>item.setAttribute('aria-pressed',item.dataset.map==='route'?route:item.dataset.map===view));
-    draw();
+    buttons();draw();
   });
-  workspace.querySelectorAll('[data-test]').forEach(button=>button.onclick=()=>{
-    const i=Number(button.dataset.test);
-    const test=city.tests[i];
-    if(!game.solved.includes(i)){game.solved.push(i);save();sound('proof');}
+  function finishTest(index,button) {
+    if(!canAct()) return;
     halt();
-    site.value=city.ops.find(item=>item.id===test.needs[0]).site;
-    change(test.time);
-    draw();
+    if(!game.solved.includes(index)){game.solved.push(index);save();sound('proof');}
     button.classList.add('test-done');
-    button.textContent='✓ '+test.title;
-    const count=workspace.querySelector('.mission output');
-    count.textContent=game.solved.length+' / 2 test';
-    $('action').disabled=game.solved.length<2;
-    showNote(test.result,'good');
+    button.querySelector('b').textContent='✓';
+    const next=city.tests.findIndex((_,i)=>!game.solved.includes(i));
+    workspace.querySelectorAll('[data-test]').forEach((item,i)=>item.classList.toggle('next-test',i===next));
+    workspace.querySelector('.mission output').textContent=game.solved.length+' / 2';
+    $('objective').textContent=next===-1?'Karar vermeye hazırsın':'Diğer testi incele';
+    $('action').disabled=next!==-1;
+    showNote(city.tests[index].result,'good');
+  }
+  workspace.querySelectorAll('[data-test]').forEach(button=>button.onclick=()=>{
+    if(!canAct()) return;
+    halt();
+    const index=Number(button.dataset.test);
+    const test=city.tests[index];
+    const replay=game.solved.includes(index);
+    site.value=city.ops.find(item=>item.id===test.needs[0]).site;
+    const chosen=city.sites.find(item=>item[0]===site.value);
+    view='local';route=true;buttons();
+    const skip=replay || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    change(skip?test.time:Math.max(city.range[0],test.time-5));draw();
+    $('map-note').textContent=chosen[1]+' · '+coordinateLabel(chosen.slice(2));
+    if(skip){finishTest(index,button);return;}
+    activeTest=index;
+    button.setAttribute('aria-busy','true');
+    $('playback').textContent='Ⅱ Duraklat';
+    showNote('Kayıtlar olay saatine doğru oynatılıyor…');
+    sound('open');
+    playback=setInterval(()=>{
+      if(!canAct()){halt();return;}
+      change(Math.min(test.time,minute+1));
+      if(minute>=test.time) finishTest(index,button);
+    },255);
   });
   $('action').onclick=()=>setPhase('verdict');
   draw();change(minute);
